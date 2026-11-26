@@ -1,15 +1,11 @@
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss()
-  ],
+  plugins: [react()],
   server: {
     host: true, // Enables local network sharing (Wi-Fi / Client access)
-    port: 5176,
+    port: 5175,
   }
 })

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import Topbar from "./components/Topbar";
-import DashboardHome from "./components/DashboardHome";
+import Header from "./components/Header";
+import Dashboard from "./components/Dashboard";
 import LoginPage from "./components/LoginPage";
 import ModuleStudio from "./components/ModuleStudio";
 import UserAccessManager from "./components/UserAccessManager";
 import DynamicModuleView from "./components/DynamicModuleView";
-import PurchaseOrderBuilder from "./components/PurchaseOrderBuilder";
 import { rbacStore } from "./services/rbacStore";
+import "./styles/builder.css";
 
 export default function App() {
   // 1. Current Authenticated User
@@ -23,13 +23,13 @@ export default function App() {
   // 2. Dynamic Modules State
   const [modules, setModules] = useState(() => rbacStore.getModules());
 
-  // 3. Active View State (Starts on Screen 1: "home" matching Image 1)
-  const [activeView, setActiveView] = useState("home");
+  // 3. Active View State (Defaults to Dashboard!)
+  const [activeView, setActiveView] = useState("dashboard");
 
   // Auth Handlers
   const handleLogin = (user) => {
     setCurrentUser(user);
-    setActiveView("home"); // Default landing is Screen 1 (Dashboard User)
+    setActiveView("dashboard");
   };
 
   const handleLogout = () => {
@@ -49,8 +49,8 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#edf1f5] font-sans text-slate-800 antialiased overflow-hidden">
-      {/* 1. Left Sidebar styled with exact Dark Navy Theme of Image 1 */}
+    <div className="erp-app-layout">
+      {/* 1. Left ERP Sidebar (Dashboard, Module Studio, Users & Access, Workspaces) */}
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -59,68 +59,50 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* 2. Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Topbar shown on sub-views; DashboardHome has its own top header matching Image 1 */}
-        {activeView !== "home" && (
-          <Topbar
-            activeView={activeView}
-            modules={modules}
-            currentUser={currentUser}
-          />
-        )}
+      {/* 2. Main Page Area (Top Header + View Content) */}
+      <div className="erp-main-wrapper">
+        <Header
+          activeView={activeView}
+          setActiveView={setActiveView}
+          modules={modules}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
 
-        {/* Dynamic Main Views */}
-        <main className="flex-1 overflow-y-auto">
-          {/* SCREEN 1: Live Dynamic ERP Dashboard Home */}
-          {activeView === "home" && (
-            <DashboardHome
+        <main className="erp-page-content">
+          {/* View 1: Simple Beautiful Dashboard UI */}
+          {activeView === "dashboard" && (
+            <Dashboard
               currentUser={currentUser}
               modules={modules}
-              onNavigateStudio={() => setActiveView("studio")}
-              onNavigateUsers={() => setActiveView("users")}
-              onNavigatePoBuilder={() => setActiveView("po_builder")}
+              onNavigate={(view) => setActiveView(view)}
               onSelectModule={(modId) => setActiveView(modId)}
             />
           )}
 
-          {/* SCREEN 2: Module Studio (Super Admin only) */}
+          {/* View 2: Drag & Drop Module Studio (Admin only) */}
           {activeView === "studio" && (
-            currentUser?.role === "admin" ? (
-              <ModuleStudio
-                currentUser={currentUser}
-                onModuleCreated={handleRefreshModules}
-                onSelectModuleView={(modId) => setActiveView(modId)}
-              />
-            ) : (
-              <div className="p-12 text-center text-slate-500 max-w-md mx-auto">
-                <p className="font-bold text-base text-slate-900">Access Restricted</p>
-                <p className="text-sm mt-1 text-slate-500">Only Super Admin has access to Drag &amp; Drop Module Studio.</p>
-              </div>
-            )
+            <ModuleStudio
+              onModuleCreated={handleRefreshModules}
+              onSelectModuleView={(modId) => setActiveView(modId)}
+            />
           )}
 
-          {/* SCREEN 3: User Access & Permissions Manager (Super Admin only) */}
+          {/* View 3: User & Module Access Manager (Admin only) */}
           {activeView === "users" && (
-            currentUser?.role === "admin" ? (
-              <UserAccessManager
-                onRefreshUsers={() => setModules(rbacStore.getModules())}
-              />
-            ) : (
-              <div className="p-12 text-center text-slate-500 max-w-md mx-auto">
-                <p className="font-bold text-base text-slate-900">Access Restricted</p>
-                <p className="text-sm mt-1 text-slate-500">Only Super Admin has access to Users &amp; Permissions Manager.</p>
-              </div>
-            )
+            <UserAccessManager
+              onRefreshUsers={() => setModules(rbacStore.getModules())}
+            />
           )}
 
-          {/* SCREEN 4: Dynamic Record Table & Entry Form (for any Permitted Module) */}
-          {activeView !== "home" && activeView !== "studio" && activeView !== "users" && (
+          {/* View 4: Dynamic Module Data Table & Form Entry */}
+          {activeView !== "dashboard" && activeView !== "studio" && activeView !== "users" && (
             <DynamicModuleView
               key={activeView}
               moduleId={activeView}
               currentUser={currentUser}
               onBackToStudio={() => setActiveView("studio")}
+              onModulesUpdated={handleRefreshModules}
             />
           )}
         </main>

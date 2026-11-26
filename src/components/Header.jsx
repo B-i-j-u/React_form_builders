@@ -1,14 +1,11 @@
 import React from "react";
 import { 
-  FormInput, 
+  LayoutDashboard, 
   Layers, 
   Users, 
-  LogOut, 
-  ShieldCheck, 
-  Package,
-  CalendarCheck,
-  Receipt,
-  CheckCircle2
+  Package, 
+  ArrowLeft,
+  ChevronRight
 } from "lucide-react";
 
 export default function Header({
@@ -20,119 +17,96 @@ export default function Header({
 }) {
   const isAdmin = currentUser?.role === "admin";
 
-  // For Admin: keep the header ultra-clean with only Module Studio and Users & Access!
-  // Modules created in Studio will NOT clutter the top header.
-  // For normal users: only show the modules assigned to that user.
-  const permittedModules = isAdmin
-    ? []
-    : modules.filter((m) => 
-        (currentUser?.allowedModuleIds || []).includes("*") || 
-        (currentUser?.allowedModuleIds || []).includes(m.id)
-      );
+  // Breadcrumb / Title generator
+  const getPageInfo = () => {
+    if (activeView === "dashboard") {
+      return {
+        title: "Overview Dashboard",
+        section: "Main",
+        icon: <LayoutDashboard size={18} />
+      };
+    }
+    if (activeView === "studio") {
+      return {
+        title: "Module Studio",
+        section: "Admin Tools",
+        icon: <Layers size={18} />
+      };
+    }
+    if (activeView === "users") {
+      return {
+        title: "Users & Module Access",
+        section: "Admin Tools",
+        icon: <Users size={18} />
+      };
+    }
 
-  const getModuleIcon = (mod) => {
-    if (mod.id === "mod_products") return <Package size={16} />;
-    if (mod.id === "mod_purchase_orders") return <Receipt size={16} />;
-    if (mod.id === "mod_leave") return <CalendarCheck size={16} />;
-    if (mod.id === "mod_customers") return <Users size={16} />;
-    return <Package size={16} />;
+    const currentMod = modules.find((m) => m.id === activeView);
+    return {
+      title: currentMod?.name || "Dynamic Module",
+      section: "Modules",
+      icon: <Package size={18} />
+    };
   };
 
+  const pageInfo = getPageInfo();
+
   return (
-    <header className="erp-clean-header">
-      {/* Brand */}
-      <div className="erp-brand-block">
-        <div className="erp-brand-icon">
-          <Layers size={22} />
-        </div>
-        <div>
-          <h1 className="erp-brand-title">Enterprise Dynamic ERP</h1>
-          <span className="erp-brand-tagline">Drag &amp; Drop Modules • Dynamic RBAC</span>
-        </div>
-      </div>
+    <header className="erp-topbar">
+      {/* Breadcrumb Info */}
+      <div className="topbar-breadcrumb">
+        <button
+          type="button"
+          className="breadcrumb-home-btn"
+          onClick={() => setActiveView && setActiveView("dashboard")}
+          title="Return to Dashboard"
+        >
+          <LayoutDashboard size={15} />
+          <span>Dashboard</span>
+        </button>
 
-      {/* Center Dynamic Navigation Tabs */}
-      <nav className="erp-nav-tabs">
-        {/* Admin-only tools */}
-        {isAdmin && (
+        {activeView !== "dashboard" && (
           <>
-            <button
-              type="button"
-              className={`nav-tab-item ${activeView === "studio" ? "active" : ""}`}
-              onClick={() => setActiveView("studio")}
-            >
-              <Layers size={16} />
-              <span>Module Studio</span>
-            </button>
-
-            <button
-              type="button"
-              className={`nav-tab-item ${activeView === "users" ? "active" : ""}`}
-              onClick={() => setActiveView("users")}
-            >
-              <Users size={16} />
-              <span>Users &amp; Access</span>
-            </button>
-
-            {/* If Admin is viewing a module from Studio, show clean active tab */}
-            {activeView !== "studio" && activeView !== "users" && (
-              <button
-                type="button"
-                className="nav-tab-item active"
-                onClick={() => setActiveView(activeView)}
-              >
-                <Package size={16} />
-                <span>Viewing: {modules.find((m) => m.id === activeView)?.name || "Module"}</span>
-              </button>
-            )}
+            <ChevronRight size={14} className="breadcrumb-arrow" />
+            <span className="breadcrumb-section">{pageInfo.section}</span>
+            <ChevronRight size={14} className="breadcrumb-arrow" />
+            <div className="breadcrumb-current">
+              {pageInfo.icon}
+              <span>{pageInfo.title}</span>
+            </div>
           </>
         )}
+      </div>
 
-        {/* Dynamic Modules Permitted for this User */}
-        {permittedModules.map((m) => {
-          const isActive = activeView === m.id;
-          const pendingCount = (m.records || []).filter((r) => r.status === "pending").length;
+      {/* Topbar Right Profile & Status */}
+      <div className="topbar-right-actions">
+        {activeView !== "dashboard" && (
+          <button
+            type="button"
+            className="topbar-back-btn"
+            onClick={() => setActiveView && setActiveView("dashboard")}
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Dashboard</span>
+          </button>
+        )}
 
-          return (
-            <button
-              key={m.id}
-              type="button"
-              className={`nav-tab-item ${isActive ? "active" : ""}`}
-              onClick={() => setActiveView(m.id)}
-            >
-              {getModuleIcon(m)}
-              <span>{m.name}</span>
-              {pendingCount > 0 && (
-                <span className="nav-pending-badge" title={`${pendingCount} pending records`}>
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+        <div className="topbar-status-badge">
+          <span className="live-status-dot"></span>
+          <span>System Live</span>
+        </div>
 
-      {/* Right User Profile & Sign Out */}
-      <div className="erp-user-actions">
         {currentUser && (
-          <div className="header-profile-box">
-            <div className="profile-avatar-circle">
+          <div className="topbar-user-pill">
+            <div className="topbar-avatar">
               {currentUser.fullName?.charAt(0) || "U"}
             </div>
-            <div className="profile-details-mini">
-              <span className="profile-name">{currentUser.fullName}</span>
-              <span className="profile-role-pill">
+            <div className="topbar-user-meta">
+              <span className="topbar-name">{currentUser.fullName}</span>
+              <span className="topbar-role">
                 {isAdmin ? "👑 Super Admin" : currentUser.canApprove ? "🛡️ Approver" : "💼 Staff"}
               </span>
             </div>
-            <button
-              type="button"
-              className="btn-sign-out"
-              onClick={onLogout}
-              title="Sign Out to switch account"
-            >
-              <LogOut size={16} />
-            </button>
           </div>
         )}
       </div>
