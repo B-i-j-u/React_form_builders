@@ -10,7 +10,11 @@ import {
   Building2,
   Receipt,
   Calculator,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Radio,
+  Mail,
+  Phone,
+  Upload
 } from "lucide-react";
 
 export const AVAILABLE_FIELDS = [
@@ -22,8 +26,8 @@ export const AVAILABLE_FIELDS = [
     description: "Single-line text (e.g. Product Name, Supplier)",
     icon: Type,
     defaultConfig: {
-      label: "Field Label",
-      placeholder: "Enter value...",
+      label: "Text Field",
+      placeholder: "Enter text...",
       required: false,
       defaultValue: ""
     }
@@ -35,7 +39,7 @@ export const AVAILABLE_FIELDS = [
     description: "Numeric or currency (e.g. Price, Quantity)",
     icon: Hash,
     defaultConfig: {
-      label: "Amount / Quantity",
+      label: "Number / Amount",
       placeholder: "0.00",
       required: false,
       min: 0,
@@ -49,34 +53,23 @@ export const AVAILABLE_FIELDS = [
     description: "Select from options (e.g. Category, Status)",
     icon: ChevronDown,
     defaultConfig: {
-      label: "Select Option",
+      label: "Dropdown Selection",
       options: ["Option 1", "Option 2", "Option 3"],
       required: false,
       defaultValue: "Option 1"
     }
   },
   {
-    type: "textarea",
+    type: "radio",
     category: "general",
-    label: "Long Text / Notes",
-    description: "Multi-line text (e.g. Description, Specs)",
-    icon: AlignLeft,
+    label: "Radio Buttons",
+    description: "Single choice options (e.g. Type, Gender, Tier)",
+    icon: Radio,
     defaultConfig: {
-      label: "Description",
-      placeholder: "Enter detailed notes...",
+      label: "Choose One",
+      options: ["Option A", "Option B", "Option C"],
       required: false,
-      rows: 3
-    }
-  },
-  {
-    type: "date",
-    category: "general",
-    label: "Date Picker",
-    description: "Date field (e.g. Delivery Date, Expiry Date)",
-    icon: Calendar,
-    defaultConfig: {
-      label: "Date",
-      required: false
+      defaultValue: "Option A"
     }
   },
   {
@@ -86,9 +79,70 @@ export const AVAILABLE_FIELDS = [
     description: "Boolean yes/no option (e.g. Is Active, Taxable)",
     icon: CheckSquare,
     defaultConfig: {
-      label: "Active Status",
-      checkboxLabel: "Enable this item",
-      checked: true
+      label: "Checkbox Option",
+      checkboxLabel: "Enable / I agree",
+      checked: false,
+      required: false
+    }
+  },
+  {
+    type: "textarea",
+    category: "general",
+    label: "Long Text / Notes",
+    description: "Multi-line text (e.g. Description, Remarks)",
+    icon: AlignLeft,
+    defaultConfig: {
+      label: "Description / Notes",
+      placeholder: "Enter details here...",
+      required: false,
+      rows: 3
+    }
+  },
+  {
+    type: "date",
+    category: "general",
+    label: "Date Picker",
+    description: "Date field (e.g. Due Date, Inward Date)",
+    icon: Calendar,
+    defaultConfig: {
+      label: "Date",
+      required: false
+    }
+  },
+  {
+    type: "email",
+    category: "general",
+    label: "Email Address",
+    description: "Email format validation (e.g. contact@vendor.com)",
+    icon: Mail,
+    defaultConfig: {
+      label: "Email Address",
+      placeholder: "name@company.com",
+      required: false
+    }
+  },
+  {
+    type: "phone",
+    category: "general",
+    label: "Phone / Mobile",
+    description: "Contact phone number (e.g. +91 98765 43210)",
+    icon: Phone,
+    defaultConfig: {
+      label: "Phone Number",
+      placeholder: "+91 98765 43210",
+      required: false
+    }
+  },
+  {
+    type: "file",
+    category: "general",
+    label: "File / Attachment",
+    description: "Document or image upload (e.g. Invoice PDF, Photo)",
+    icon: Upload,
+    defaultConfig: {
+      label: "Upload Document",
+      placeholder: "Attach PDF, JPG, PNG",
+      required: false
     }
   },
   {
@@ -239,5 +293,95 @@ export const INVOICE_PO_TEMPLATE_PRESET = [
     taxAmount: "1,17,000.00",
     shippingCharges: "2,500.00",
     grandTotal: "7,69,500.00"
+  }
+];
+
+// Sample Sales & Customer Orders Template (Standard Clean Fields)
+export const SAMPLE_SALES_MODULE_PRESET = [
+  {
+    id: "fld_so_num",
+    type: "text",
+    label: "Sales Order / Invoice #",
+    placeholder: "e.g. SO-2026-001",
+    required: true,
+    defaultValue: "SO-2026-001"
+  },
+  {
+    id: "fld_customer_name",
+    type: "text",
+    label: "Customer / Client Name",
+    placeholder: "e.g. Global Tech Solutions Ltd",
+    required: true,
+    defaultValue: ""
+  },
+  {
+    id: "fld_item_name",
+    type: "text",
+    label: "Product / Item Sold",
+    placeholder: "e.g. Enterprise Cloud License / Server Unit",
+    required: true,
+    defaultValue: ""
+  },
+  {
+    id: "fld_quantity",
+    type: "number",
+    label: "Order Quantity (Units)",
+    placeholder: "10",
+    required: true,
+    min: 1,
+    defaultValue: "10"
+  },
+  {
+    id: "fld_unit_price",
+    type: "number",
+    label: "Unit Price (₹)",
+    placeholder: "25000",
+    required: true,
+    min: 0,
+    defaultValue: "25000"
+  },
+  {
+    id: "fld_order_status",
+    type: "select",
+    label: "Order Fulfillment Status",
+    options: ["Pending Approval", "In Processing", "Dispatched", "Delivered", "Cancelled"],
+    required: true,
+    defaultValue: "Pending Approval"
+  },
+  {
+    id: "fld_delivery_date",
+    type: "date",
+    label: "Expected Delivery Date",
+    required: false
+  },
+  {
+    id: "fld_payment_terms",
+    type: "radio",
+    label: "Payment Terms",
+    options: ["Immediate Advance", "Net 30 Days", "Cash on Delivery"],
+    required: true,
+    defaultValue: "Net 30 Days"
+  },
+  {
+    id: "fld_customer_email",
+    type: "email",
+    label: "Customer Email Address",
+    placeholder: "orders@client.com",
+    required: false
+  },
+  {
+    id: "fld_contact_phone",
+    type: "phone",
+    label: "Contact Mobile / Phone",
+    placeholder: "+91 98765 43210",
+    required: false
+  },
+  {
+    id: "fld_order_notes",
+    type: "textarea",
+    label: "Shipping Notes & Terms",
+    placeholder: "Enter client delivery instructions or notes...",
+    required: false,
+    rows: 3
   }
 ];

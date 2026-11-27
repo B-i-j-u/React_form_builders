@@ -26,15 +26,25 @@ export default function App() {
   // 3. Active View State (Defaults to Dashboard!)
   const [activeView, setActiveView] = useState("dashboard");
 
+  // 4. Fullscreen Form Builder Mode (Hides Sidebar & Top Header when creating/editing module)
+  const [isBuilderFullScreen, setIsBuilderFullScreen] = useState(false);
+
+  // Safe navigation handler that resets fullscreen mode
+  const handleNavigate = (view) => {
+    setIsBuilderFullScreen(false);
+    setActiveView(view);
+  };
+
   // Auth Handlers
   const handleLogin = (user) => {
     setCurrentUser(user);
-    setActiveView("dashboard");
+    handleNavigate("dashboard");
   };
 
   const handleLogout = () => {
     localStorage.removeItem("rfb_auth_user");
     setCurrentUser(null);
+    setIsBuilderFullScreen(false);
   };
 
   // Refresh modules when modified
@@ -49,34 +59,38 @@ export default function App() {
   }
 
   return (
-    <div className="erp-app-layout">
-      {/* 1. Left ERP Sidebar (Dashboard, Module Studio, Users & Access, Workspaces) */}
-      <Sidebar
-        activeView={activeView}
-        setActiveView={setActiveView}
-        modules={modules}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-      />
-
-      {/* 2. Main Page Area (Top Header + View Content) */}
-      <div className="erp-main-wrapper">
-        <Header
+    <div className={`erp-app-layout ${isBuilderFullScreen ? "fullscreen-builder-active" : ""}`}>
+      {/* 1. Left ERP Sidebar (Hidden when in Full-Screen Form Builder) */}
+      {!isBuilderFullScreen && (
+        <Sidebar
           activeView={activeView}
-          setActiveView={setActiveView}
+          setActiveView={handleNavigate}
           modules={modules}
           currentUser={currentUser}
           onLogout={handleLogout}
         />
+      )}
 
-        <main className="erp-page-content">
+      {/* 2. Main Page Area (Top Header + View Content) */}
+      <div className={`erp-main-wrapper ${isBuilderFullScreen ? "fullscreen" : ""}`}>
+        {!isBuilderFullScreen && (
+          <Header
+            activeView={activeView}
+            setActiveView={handleNavigate}
+            modules={modules}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
+        )}
+
+        <main className={`erp-page-content ${isBuilderFullScreen ? "fullscreen-no-padding" : ""}`}>
           {/* View 1: Simple Beautiful Dashboard UI */}
           {activeView === "dashboard" && (
             <Dashboard
               currentUser={currentUser}
               modules={modules}
-              onNavigate={(view) => setActiveView(view)}
-              onSelectModule={(modId) => setActiveView(modId)}
+              onNavigate={(view) => handleNavigate(view)}
+              onSelectModule={(modId) => handleNavigate(modId)}
             />
           )}
 
@@ -84,7 +98,8 @@ export default function App() {
           {activeView === "studio" && (
             <ModuleStudio
               onModuleCreated={handleRefreshModules}
-              onSelectModuleView={(modId) => setActiveView(modId)}
+              onSelectModuleView={(modId) => handleNavigate(modId)}
+              onToggleFullScreen={setIsBuilderFullScreen}
             />
           )}
 
@@ -101,8 +116,9 @@ export default function App() {
               key={activeView}
               moduleId={activeView}
               currentUser={currentUser}
-              onBackToStudio={() => setActiveView("studio")}
+              onBackToStudio={() => handleNavigate("studio")}
               onModulesUpdated={handleRefreshModules}
+              onSelectModule={(modId) => handleNavigate(modId)}
             />
           )}
         </main>

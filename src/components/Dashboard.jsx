@@ -19,7 +19,8 @@ import {
   X,
   RefreshCw,
   Zap,
-  CheckSquare
+  CheckSquare,
+  ClipboardCheck
 } from "lucide-react";
 import { rbacStore } from "../services/rbacStore";
 
@@ -42,27 +43,15 @@ export default function Dashboard({
         (currentUser?.allowedModuleIds || []).includes(m.id)
       );
 
-  // Compute live interconnected financial stats
-  let totalSalesRevenue = 0;
-  let totalPurchasesExpense = 0;
+  // Compute live stats dynamically across ALL modules
+  let totalRecordCount = 0;
   let totalPendingCount = 0;
   let totalApprovedCount = 0;
   const allSubmissions = [];
 
-  const salesMod = modulesState.find((m) => m.id === "mod_sales");
-  (salesMod?.records || []).forEach((r) => {
-    const amt = Number(String(r.inv_total || 0).replace(/,/g, "")) || 0;
-    totalSalesRevenue += amt;
-  });
-
-  const purchaseMod = modulesState.find((m) => m.id === "mod_purchase");
-  (purchaseMod?.records || []).forEach((r) => {
-    const amt = Number(String(r.po_total || 0).replace(/,/g, "")) || 0;
-    totalPurchasesExpense += amt;
-  });
-
   permittedModules.forEach((mod) => {
     const recs = mod.records || [];
+    totalRecordCount += recs.length;
     recs.forEach((r) => {
       if (r.status === "pending") totalPendingCount++;
       if (r.status === "approved") totalApprovedCount++;
@@ -101,6 +90,7 @@ export default function Dashboard({
   const getModuleIcon = (mod) => {
     if (mod.id === "mod_inventory") return <Package size={22} className="text-indigo-600" />;
     if (mod.id === "mod_purchase") return <Receipt size={22} className="text-amber-600" />;
+    if (mod.id === "mod_grn") return <ClipboardCheck size={22} className="text-teal-600" />;
     if (mod.id === "mod_sales") return <TrendingUp size={22} className="text-emerald-600" />;
     if (mod.id === "mod_transactions") return <Wallet size={22} className="text-cyan-600" />;
     if (mod.id === "mod_employee") return <Users size={22} className="text-purple-600" />;
@@ -157,38 +147,27 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* 2. Interconnected KPI Metrics Grid */}
+      {/* 2. Dynamic KPI Metrics Grid */}
       <div className="dash-kpi-grid">
         <div className="dash-kpi-card">
-          <div className="kpi-icon-box purple">
+          <div className="kpi-icon-box amber">
             <Layers size={22} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Active Modules</span>
-            <div className="kpi-val">{permittedModules.length}</div>
-            <span className="kpi-sub">Permitted to you</span>
+            <span className="kpi-label">Total Modules</span>
+            <div className="kpi-val text-amber">{permittedModules.length}</div>
+            <span className="kpi-sub">Your ERP workspaces</span>
           </div>
         </div>
 
         <div className="dash-kpi-card">
           <div className="kpi-icon-box emerald">
-            <TrendingUp size={22} />
+            <FileText size={22} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Total Sales Invoiced</span>
-            <div className="kpi-val text-emerald">₹{totalSalesRevenue.toLocaleString()}</div>
-            <span className="kpi-sub">Auto-synced from Sales</span>
-          </div>
-        </div>
-
-        <div className="dash-kpi-card">
-          <div className="kpi-icon-box amber">
-            <TrendingDown size={22} />
-          </div>
-          <div className="kpi-info">
-            <span className="kpi-label">Procurement Expenses</span>
-            <div className="kpi-val text-amber">₹{totalPurchasesExpense.toLocaleString()}</div>
-            <span className="kpi-sub">Auto-synced from POs</span>
+            <span className="kpi-label">Total Records</span>
+            <div className="kpi-val text-emerald">{totalRecordCount}</div>
+            <span className="kpi-sub">Across all modules</span>
           </div>
         </div>
 
@@ -202,64 +181,49 @@ export default function Dashboard({
             <span className="kpi-sub">Awaiting review</span>
           </div>
         </div>
-      </div>
 
-      {/* 3. Live Interconnected Data Flow Architecture Banner */}
-      <div className="data-flow-overview-card">
-        <div className="flow-card-header">
-          <div className="flow-header-left">
-            <Zap size={18} className="text-amber-500" />
-            <h3 className="flow-title">Live 2-Way Connected ERP Data Flow</h3>
+        <div className="dash-kpi-card">
+          <div className="kpi-icon-box purple">
+            <CheckCircle2 size={22} />
           </div>
-          <span className="flow-live-pill">⚡ Auto-Linked &bull; Zero Re-Entry</span>
-        </div>
-
-        <div className="flow-diagram-steps">
-          <div className="flow-step-box" onClick={() => onSelectModule("mod_inventory")}>
-            <div className="step-icon-circle bg-indigo-50 text-indigo-600">
-              <Package size={20} />
-            </div>
-            <strong>Products &amp; Inventory</strong>
-            <span>Live Stock Levels</span>
-          </div>
-
-          <div className="flow-arrow-indicator">
-            <span>⇄</span>
-          </div>
-
-          <div className="flow-step-box" onClick={() => onSelectModule("mod_sales")}>
-            <div className="step-icon-circle bg-emerald-50 text-emerald-600">
-              <TrendingUp size={20} />
-            </div>
-            <strong>Sales &amp; Invoicing</strong>
-            <span>Deducts Stock &bull; Adds Income</span>
-          </div>
-
-          <div className="flow-arrow-indicator">
-            <span>⇄</span>
-          </div>
-
-          <div className="flow-step-box" onClick={() => onSelectModule("mod_purchase")}>
-            <div className="step-icon-circle bg-amber-50 text-amber-600">
-              <Receipt size={20} />
-            </div>
-            <strong>Purchase Orders</strong>
-            <span>Adds Stock &bull; Adds Expense</span>
-          </div>
-
-          <div className="flow-arrow-indicator">
-            <span>⇄</span>
-          </div>
-
-          <div className="flow-step-box" onClick={() => onSelectModule("mod_transactions")}>
-            <div className="step-icon-circle bg-cyan-50 text-cyan-600">
-              <Wallet size={20} />
-            </div>
-            <strong>Financial Cashbook</strong>
-            <span>Live Unified Balance</span>
+          <div className="kpi-info">
+            <span className="kpi-label">Approved</span>
+            <div className="kpi-val">{totalApprovedCount}</div>
+            <span className="kpi-sub">Records confirmed</span>
           </div>
         </div>
       </div>
+
+      {/* 3. Live Module Link Banner — only if 2+ modules exist */}
+      {permittedModules.length >= 2 && (
+        <div className="data-flow-overview-card">
+          <div className="flow-card-header">
+            <div className="flow-header-left">
+              <Zap size={18} className="text-amber-500" />
+              <h3 className="flow-title">⚡ Dynamic Module Linking Active</h3>
+            </div>
+            <span className="flow-live-pill">⚡ 1-Click Link Ready</span>
+          </div>
+          <div className="flow-diagram-steps">
+            {permittedModules.slice(0, 3).map((mod, i) => (
+              <React.Fragment key={mod.id}>
+                <div className="flow-step-box" onClick={() => onSelectModule(mod.id)}>
+                  <div className="step-icon-circle bg-amber-50 text-amber-600">
+                    <Layers size={20} />
+                  </div>
+                  <strong>{mod.name}</strong>
+                  <span>{(mod.records || []).length} records</span>
+                </div>
+                {i < permittedModules.slice(0, 3).length - 1 && (
+                  <div className="flow-arrow-indicator">
+                    <span>⚡ Link ➔</span>
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 4. Permitted Workspaces Cards Grid */}
       <div className="dash-section-card">

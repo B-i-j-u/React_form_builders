@@ -8,7 +8,9 @@ import {
   TrendingUp, 
   Wallet, 
   LogOut,
-  CheckSquare
+  CheckSquare,
+  ClipboardCheck,
+  FileText
 } from "lucide-react";
 
 export default function Sidebar({
@@ -23,18 +25,21 @@ export default function Sidebar({
   // Filter modules visible to this specific user based on RBAC permissions
   const permittedModules = isAdmin
     ? modules
-    : modules.filter((m) => 
-        (currentUser?.allowedModuleIds || []).includes("*") || 
-        (currentUser?.allowedModuleIds || []).includes(m.id)
-      );
+    : modules.filter((m) => {
+        const allowed = currentUser?.allowedModuleIds || [];
+        if (allowed.includes("*")) return true;
+        return (
+          allowed.includes(m.id) ||
+          allowed.includes(m.name) ||
+          allowed.some((a) => m.name && m.name.toLowerCase().includes(a.replace(/^mod_/, "").toLowerCase()))
+        );
+      });
 
   const getModuleIcon = (mod) => {
-    if (mod.id === "mod_inventory") return <Package size={17} className="text-indigo-500" />;
-    if (mod.id === "mod_purchase") return <Receipt size={17} className="text-amber-500" />;
-    if (mod.id === "mod_sales") return <TrendingUp size={17} className="text-emerald-500" />;
-    if (mod.id === "mod_transactions") return <Wallet size={17} className="text-cyan-500" />;
-    if (mod.id === "mod_employee") return <Users size={17} className="text-purple-500" />;
-    if (mod.id === "mod_tasks") return <CheckSquare size={17} className="text-blue-500" />;
+    const n = (mod.name || "").toLowerCase();
+    if (mod.id === "mod_purchase" || n.includes("purchase")) return <Receipt size={17} className="text-amber-500" />;
+    if (mod.id === "mod_grn" || n === "grn") return <ClipboardCheck size={17} className="text-teal-500" />;
+    if (mod.id === "mod_invoice" || n.includes("invoice")) return <FileText size={17} className="text-emerald-500" />;
     return <Layers size={17} />;
   };
 
